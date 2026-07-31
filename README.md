@@ -39,6 +39,16 @@ Now calculation should be starting on the server.
 
 Run file watching development server with `docker compose up --watch` which deploys to `localhost:5000`. It runs single consumer. Active changes may cause some tasks to hang due to consumer re-build. Reset database after build from the UI if this happens.
 
+## Screencaptures of running
+
+Running `cargo run --bin create_tasks -- -c 1024`
+
+![Task creation](md-assets/output-creating-tasks.gif)
+
+After scale up cpu becomes busy
+
+![Scale up](md-assets/output-scale-up.gif)
+
 ## Authors
 
 - [vahvero](https://github.com/vahvero)
