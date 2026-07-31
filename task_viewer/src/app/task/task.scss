@@ -1,0 +1,46 @@
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--card-bg);
+    padding: 0.85rem 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px var(--card-shadow);
+    transition: box-shadow 0.2s ease, transform 0.1s ease;
+
+    &:hover {
+        box-shadow: 0 3px 8px var(--card-hover-shadow);
+    }
+
+    &:active {
+        transform: scale(0.995);
+    }
+}
+
+.row-item {
+    color: var(--text-color);
+    padding: 0.2rem;
+    font-size: 0.95rem;
+}
+
+.row-item:first-child {
+    font-weight: 600;
+    color: var(--title-color);
+    min-width: 3rem;
+}
+
+.row-item:last-child {
+    font-weight: 500;
+    padding-left: 0;
+}
+
+.spinner-margin {
+    margin-left: 0.75rem;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+}
+
+.spinner {
+    border-color: var(--spinner-border) var(--spinner-border) var(--spinner-top) var(--spinner-border);
+}

@@ -1,0 +1,9 @@
+<div class="row">
+    <span class="row-item">{{ id() }}:</span>
+    <span class="row-item">{{ state() }}</span>
+    @if(state() ==="IN-PROGRESS") {
+    <div class="spinner-margin">
+        <div class="spinner"></div>
+    </div>
+    }
+</div>

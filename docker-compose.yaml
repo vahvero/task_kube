@@ -1,0 +1,103 @@
+services:
+  consumer:
+    command: cargo run --bin consumer
+    depends_on:
+      task-kube-service:
+        condition: service_healthy
+    environment:
+      - API_ADDRESS=task-kube-service
+      - API_PORT=4000
+      - RUST_LOG=info
+    build:
+      context: .
+      dockerfile: ./docker/builder.develop.Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - backend
+    develop:
+      watch:
+        - path: src
+          action: restart
+          target: /app
+        - path: Cargo.toml
+          action: rebuild
+
+  task-kube-service:
+    command: cargo run --bin task_server
+    environment:
+      - PORT=4000
+      - DATABASE_URL=task.db
+      - RUST_LOG=info
+    working_dir: /app
+    volumes:
+      - .:/app
+      - db-data:/app/data
+    build:
+      context: .
+      dockerfile: ./docker/builder.develop.Dockerfile
+    ports:
+      - "4000:4000"
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://127.0.0.1:4000/healthcheck || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+    develop:
+      watch:
+        - path: src
+          action: restart
+          target: /app
+        - path: Cargo.toml
+          action: rebuild
+
+  task-viewer-service:
+    build:
+      dockerfile: ./docker/builder.develop.Dockerfile
+    working_dir: /app/task_viewer
+    volumes:
+      - ./task_viewer:/app/task_viewer
+    ports:
+      - "4200:4200"
+    networks:
+      - frontend
+    healthcheck:
+      test: [ "CMD-SHELL", "node -e \"require('http').get('http://127.0.0.1:4200', res => process.exit(res.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1));\"" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 15s
+    command: [ "sh", "-c", "ng serve --host 0.0.0.0 --port 4200" ]
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./nginx/nginx.develop.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      task-kube-service:
+        condition: service_healthy
+      task-viewer-service:
+        condition: service_healthy
+
+    networks:
+      - backend
+      - frontend
+    develop:
+      watch:
+        - path: nginx/nginx.develop.conf
+          action: sync+exec
+          target: /etc/nginx
+          exec:
+            command: [ "nginx", "-s", "reload" ]
+volumes:
+  db-data:
+
+networks:
+  backend:
+  frontend:

@@ -1,0 +1,107 @@
+/* You can add global styles to this file, and also import other style files */
+
+@use 'sass:color';
+
+// 1. Define Variables
+$size: 1rem;
+$color: black;
+$border-width: 1px;
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    width: $size;
+    height: $size;
+    border: $border-width solid color.adjust($color, $alpha: -0.8);
+    border-top-color: $color;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+// Global reset and base styles
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-color: #f5f5f5;
+    --text-color: #333;
+    --card-bg: #fff;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+    --card-hover-shadow: rgba(0, 0, 0, 0.12);
+    --title-color: #222;
+    --text-muted: #555;
+    --text-secondary: #999;
+    --text-bold: #333;
+    --btn-shadow: rgba(230, 126, 34, 0.3);
+    --btn-hover-shadow: rgba(230, 126, 34, 0.4);
+    --spinner-border: rgba(0, 0, 0, 0.15);
+    --spinner-top: #000;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #000;
+        --text-color: #e0e0e0;
+        --card-bg: #111;
+        --card-shadow: rgba(255, 255, 255, 0.08);
+        --card-hover-shadow: rgba(255, 255, 255, 0.12);
+        --title-color: #fff;
+        --text-muted: #888;
+        --text-secondary: #555;
+        --text-bold: #ccc;
+        --btn-shadow: rgba(230, 126, 34, 0.2);
+        --btn-hover-shadow: rgba(230, 126, 34, 0.3);
+        --spinner-border: rgba(255, 255, 255, 0.15);
+        --spinner-top: #fff;
+    }
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+// Buttons
+$btn-color: #e67e22;
+
+.btn {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary {
+    background-color: $btn-color;
+    color: #222;
+    box-shadow: 0 2px 4px var(--btn-shadow);
+
+    &:hover {
+        background-color: color.adjust($btn-color, $lightness: -10%);
+        box-shadow: 0 4px 8px var(--btn-hover-shadow);
+    }
+
+    &:active {
+        transform: scale(0.97);
+    }
+}

@@ -1,0 +1,8 @@
+target/
+task_viewer/node_modules
+task_viewer/.vscode
+task_viewer/.angular
+task_viewer/dist
+*.db
+charts/
+docker/

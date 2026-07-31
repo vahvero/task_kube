@@ -1,0 +1,33 @@
+<main>
+  <div class="stats-bar">
+    <table class="stats-table">
+      <tbody>
+        <tr>
+          <th>In progress</th>
+          <td>{{inprogressCount()}}</td>
+        </tr>
+        <tr>
+          <th>Pending</th>
+          <td>{{ uncompleted_tasks().length }}</td>
+        </tr>
+        <tr>
+          <th>Total</th>
+          <td>{{tasks().length}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="button-group">
+      <button class="btn btn-primary" (click)="createTask()">Create Task</button>
+      <button class="btn btn-primary" (click)="resetTasks()">Reset database</button>
+    </div>
+  </div>
+  @if(uncompleted_tasks().length === 0) {
+  <h4 class="empty-state">Task queue is empty</h4>
+  }
+  <ul>
+    @for(task of uncompleted_tasks(); track task.id) {
+    <li><app-task [id]="task.id" [state]="task.state" /></li>
+    }
+  </ul>
+</main>
+<router-outlet />

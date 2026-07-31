@@ -1,0 +1,7 @@
+-- Your SQL goes here
+CREATE TABLE task (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    description VARCHAR(128) NOT NULL,
+    delay INTEGER NOT NULL,
+    state VARCHAR(128) NOT NULL
+);

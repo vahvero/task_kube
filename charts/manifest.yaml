@@ -1,0 +1,199 @@
+---
+# Define common namespace for contents
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: task-kube-namespace
+---
+# Main server deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-kube-depl
+  namespace: task-kube-namespace
+spec:
+  selector:
+    matchLabels:
+      app: task-kube
+  template:
+    metadata:
+      labels:
+        app: task-kube
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: task-kube
+          image: task_server:v1.0
+          imagePullPolicy: IfNotPresent
+          resources:
+          # Random numbers
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 4000
+          volumeMounts:
+            - name: db-storage
+              mountPath: /app/data
+          # Environment definitions for task_server
+          env:
+            - name: PORT
+              value: "4000"
+            - name: DATABASE_URL
+              value: /app/data/task.db
+            - name: RUST_LOG
+              value: info
+      volumes:
+        - name: db-storage
+          emptyDir: {}  # Creates an ephemeral volume for SQLite
+
+---
+# Service pass for the main task-server deployment
+apiVersion: v1
+kind: Service
+metadata:
+  name: task-kube-service
+  namespace: task-kube-namespace
+spec:
+  selector:
+    app: task-kube
+  ports:
+    - protocol: TCP
+      port: 4000
+      targetPort: 4000
+  type: ClusterIP
+---
+# NGINX static pass and proxy service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-viewer-depl
+  namespace: task-kube-namespace
+spec:
+  selector:
+    matchLabels:
+      app: task-viewer
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: task-viewer
+    spec:
+      containers:
+        - name: task-viewer
+          image: task_viewer:v1.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          ports:
+            - containerPort: 80
+---
+# Proxy NGINX at 80 to 30000 external
+apiVersion: v1
+kind: Service
+metadata:
+  name: task-viewer-service
+  namespace: task-kube-namespace
+spec:
+  selector:
+    app: task-viewer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30000
+  type: NodePort
+
+---
+# Consumer deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: task-consumer-deployment
+  namespace: task-kube-namespace
+  labels:
+    app: task-consumer
+    key: value
+spec:
+  selector:
+    matchLabels:
+      tier: task-consumer
+  template:
+    metadata:
+      labels:
+        tier: task-consumer
+    spec:
+      containers:
+        - name: task-kube-consumer
+          image: task_consumer:v1.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: API_ADDRESS
+              value: "task-kube-service"
+            - name: API_PORT
+              value: "4000"
+            - name: RUST_LOG
+              value: info
+          resources:
+          # Random numbers
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+---
+# Autoscaling for consumers
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: task-consumer-hpa
+  namespace: task-kube-namespace
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: task-consumer-deployment
+  minReplicas: 1
+  maxReplicas: 16
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 0
+      policies:
+          # allow 100% reduction at once
+        - type: Percent
+          value: 90
+          periodSeconds: 15
+        - type: Pods
+          # can remove all pods if needed
+          value: 9
+          periodSeconds: 15
+      selectPolicy: Max
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 10
+        - type: Pods
+          value: 4
+          periodSeconds: 10
+      selectPolicy: Max
